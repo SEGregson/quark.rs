@@ -1,14 +1,9 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod Structs;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Structs::LinkedList;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    //#[test]
+    
 }
