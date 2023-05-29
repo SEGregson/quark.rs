@@ -1,8 +1,8 @@
-mod Structs;
+mod structures;
 
 #[cfg(test)]
 mod tests {
-    use super::Structs::LinkedList;
+    use super::structures::LinkedList;
 
     //#[test]
     
