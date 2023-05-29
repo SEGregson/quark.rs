@@ -55,6 +55,18 @@ impl<T> LinkedList<T> where T: Clone, T: Debug{
         self.start.value.to_owned()
     }
 
+    pub fn get_size(&self) -> usize {
+        let mut select = self.start.next.clone();
+        let mut count = 0;
+
+        while !select.is_none() {
+            select = select.unwrap().next;
+            count += 1;
+        }
+
+        return count;
+    }
+
     pub fn insert_first(&mut self, val: T) {
         let mut node = ListNode::new(val);
         node.set_next(self.start.value.clone());
@@ -99,7 +111,19 @@ impl<T> LinkedList<T> where T: Clone, T: Debug{
             return true;
         } else {false}
         
-        
+    }
+
+    pub fn delete_after(&mut self, len: usize) -> bool {
+        let mut select = self.start.clone();
+        if len > self.get_size() {return false;}
+
+        if len > 0 {
+            for i in 0..len-1 {
+                select = select.next.unwrap();
+            }
+        }
+        select.drop_tail();
+        return true;
     }
 
 

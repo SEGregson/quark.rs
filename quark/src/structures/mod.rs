@@ -1,4 +1,5 @@
-#[path = "LinkedList.rs"]
-pub mod LinkedList;
+pub mod tree;
+
+pub mod linked_list;
 
 

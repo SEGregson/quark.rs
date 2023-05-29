@@ -2,7 +2,7 @@ mod structures;
 
 #[cfg(test)]
 mod tests {
-    use super::structures::LinkedList;
+    use super::structures::linked_list;
 
     //#[test]
     
