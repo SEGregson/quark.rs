@@ -1,4 +1,4 @@
-use std::thread;
+use std::{thread, sync::{RwLock, Arc}};
 
 struct TreeNode<T> {
     key: String,
@@ -34,7 +34,7 @@ pub struct Tree<T> {
     root: TreeNode<T>
 }
 
-impl<T> Tree<T> where T: Clone {
+impl<T> Tree<T> where T: Clone, T: Send {
     pub fn new(key: &str, value: T) -> Tree<T> {
         Tree { root: TreeNode::new(key, value) }
     }
@@ -67,12 +67,7 @@ impl<T> Tree<T> where T: Clone {
     }
 
     pub fn depth_first(&self, key: &str) -> Option<T> {
-        let mut out:Option<T> = None;
-        if self.root.key == key {return Some(self.root.value.clone());}
-        for node in &self.root.arcs {
-            out = Tree::_depth_first(node.clone(), key.to_string());
-        }
-        return out;
+        Tree::_depth_first(self.root.clone(), key.to_string())
     }
 
     fn _depth_first(sub_tree: TreeNode<T>, key: String) -> Option<T> {
@@ -99,7 +94,22 @@ impl<T> Tree<T> where T: Clone {
         return None;
     }
 
-    // flood search oneday? (concurrent depthfirst)
+
+
+    // fn flood_search(&self, key: &str) -> Option<T> {
+    //     Tree::_flood_search(self.root.clone(), key.to_string())
+    // }
+
+    // fn _flood_search(sub_tree: TreeNode<T>, key: String) -> Option<T> {
+    //     if sub_tree.key == key {return Some(sub_tree.value);}
+    //     thread::spawn(move || {
+    //         let mut out = None;
+    //         for node in sub_tree.arcs {
+    //             out = Tree::_flood_search(node, key);
+    //         }
+    //         return out;
+    //     }).join().unwrap()
+    // }
 
     pub fn insert_value(&mut self, parent_key: &str, key: &str, value: T) -> bool {
         match self.node_search(parent_key) {
@@ -110,4 +120,16 @@ impl<T> Tree<T> where T: Clone {
             None => false
         }
     }
+
+
+    pub fn remove_subtree(&mut self, parent_tree: &str) -> bool {
+        match self.node_search(parent_tree) {
+            Some(mut tree) => {
+                tree.arcs = vec![];
+                true
+            },
+            None => false,
+        }
+    }
+
 }
