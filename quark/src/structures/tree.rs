@@ -1,4 +1,4 @@
-use std::{thread, sync::{RwLock, Arc}};
+
 
 struct TreeNode<T> {
     key: String,
@@ -126,6 +126,26 @@ impl<T> Tree<T> where T: Clone, T: Send {
         match self.node_search(parent_tree) {
             Some(mut tree) => {
                 tree.arcs = vec![];
+                true
+            },
+            None => false,
+        }
+    }
+
+    pub fn update_value(&self, key: &str, new_value: T) -> bool {
+        match self.node_search(key) {
+            Some(mut node) => {
+                node.value = new_value;
+                true
+            },
+            None => false,
+        }
+    }
+
+    pub fn update_key(&self, key: &str, new_key: &str) -> bool {
+        match self.node_search(key) {
+            Some(mut node) => {
+                node.key = new_key.to_string();
                 true
             },
             None => false,
