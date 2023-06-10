@@ -26,4 +26,18 @@ impl<T> ThreadData<T> {
             Err(_) => None,
         }
     }
+
+    pub fn force_read_access(&self) -> RwLockReadGuard<'_, T> {
+        match self.value.try_read() {
+            Ok(out) => out,
+            Err(_) => panic!(),
+        }
+    }
+
+    pub fn force_write_access(&self) -> RwLockWriteGuard<'_, T> {
+        match self.value.try_write() {
+            Ok(out) => out,
+            Err(_) => panic!(),
+        }
+    }
 }

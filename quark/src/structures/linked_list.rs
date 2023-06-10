@@ -6,9 +6,6 @@ struct ListNode<T> {
     next: Option<Arc<RwLock<ListNode<T>>>>
 }
 
-
-
-
 impl<T> ListNode<T> 
     where T: Debug {
     fn new(val: T) -> ListNode<T> {
@@ -44,6 +41,8 @@ impl<T> ListNode<T>
 
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 pub struct LinkedList<T: 'static> {
     start: Arc<RwLock<ListNode<T>>>
 }
@@ -97,7 +96,7 @@ impl<T> LinkedList<T> where T: Clone, T: Debug {
         let mut out = "".to_string();
         loop {
             out = format!("{out} -> {:?}", select.read().unwrap().value);
-            println!("{}", out);
+            // println!("{}", out);
 
             match select.clone().read().unwrap().get_next() {
                 Some(next) => select = next,
@@ -107,22 +106,48 @@ impl<T> LinkedList<T> where T: Clone, T: Debug {
        return out;
     }
 
-    pub fn delete_value(&mut self, value: T) -> bool {
+    pub fn delete_first_value(&mut self, value: T) -> bool {
         let mut select = self.start.read().unwrap().get_next().unwrap();
+        println!("init select");
         let mut prev = select.clone();
 
         while (!select.clone().read().unwrap().next.is_none()) && (select.clone().read().unwrap().to_string() != format!("{:?}", value)) {
+            println!("checking: {:?}", select.read().unwrap().to_string());
             prev = select.clone();
             select = select.clone().read().unwrap().next.clone().unwrap();
         }
-
+        println!("done loop");
         if !select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
-            prev.write().unwrap().set_next_node(Some(select.read().unwrap().next.clone().unwrap().clone()));
+            println!("middle of list {:?}", select.read().unwrap().to_string());
+            //prev.write().unwrap().set_next_node(Some(select.read().unwrap().next.clone().unwrap()));
+
+            match prev.clone().write() {
+                Ok(mut prev) => {
+                    prev.set_next_node(Some(match select.read() {
+                        Ok(reading) => {
+                            println!("read successful");
+                            reading
+                        },
+                        Err(e) => {
+                            println!("someth broke {:?}", e);
+                            panic!();
+                        },
+                    }.next.clone().unwrap()));
+                },
+                Err(e) => {
+                    println!("someth broke {:?}", e);
+                    panic!();
+                },
+            }
             return true;
         } else if select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
+            println!("end of list {:?}", select.read().unwrap().to_string());
             prev.write().unwrap().drop_tail();
             return true;
-        } else {false}
+        } else {
+            println!("something broke");
+            false
+        }
         
     }
 
