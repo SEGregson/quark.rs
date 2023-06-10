@@ -1,51 +1,38 @@
-use std::{fmt::Debug, ops::Deref};
+use std::{fmt::Debug, sync::{Arc, RwLock}};
 
-struct ListNode<'a, T> {
+
+struct ListNode<T> {
     value: T,
-    next: Option<&'a ListNode<'a, T>>
+    next: Option<Arc<RwLock<ListNode<T>>>>
 }
 
-impl<T> Clone for ListNode<'_, T> where T: Clone {
-    fn clone(&self) -> Self {
-        Self { 
-            value: self.value.clone(), 
-            next: self.next 
-        }
-    }
-}
 
-impl<'a, T> AsRef<ListNode<'a, T>> for ListNode<'a, T> {
-    fn as_ref(&self) -> &ListNode<'a, T> {
-        self
-    }
-}
 
-impl<'a, T> AsMut<ListNode<'a, T>> for ListNode<'a, T> {
-    fn as_mut(&mut self) -> &mut ListNode<'a, T> {
-        self
-    }
-}
 
-impl<T> ListNode<'_, T> 
-    where T: Clone + 'static,
-    T: Debug {
-    fn new(val: T) -> ListNode<'static, T> {
+impl<T> ListNode<T> 
+    where T: Debug {
+    fn new(val: T) -> ListNode<T> {
         ListNode {
             value: val,
             next: None,
         }
     }
 
+    fn new_struct(val: T) -> Arc<RwLock<ListNode<T>>> {
+        Arc::new(RwLock::new(ListNode::new(val)))
+    }
+
+
     fn set_next<'a>(&mut self, next: T) {
-        self.next = Some(&ListNode::new(next));
+        self.next = Some(ListNode::new_struct(next));
     }
 
-    fn set_next_node(&mut self, next_node: &ListNode<T>) {
-        self.next = Some(next_node);
+    fn set_next_node(&mut self, next_node: Option<Arc<RwLock<ListNode<T>>>>) {
+        self.next = next_node;
     }
 
-    fn get_next(&self) -> Option<&ListNode<T>> {
-        return self.next;
+    fn get_next(&self) -> Option<Arc<RwLock<ListNode<T>>>> {
+        return self.next.clone();
     }
 
     fn to_string(&self) -> String {format!("{:?}", self.value)}
@@ -57,31 +44,28 @@ impl<T> ListNode<'_, T>
 
 }
 
-pub struct LinkedList<'a, T> {
-    start: &'a ListNode<'a, T>
+pub struct LinkedList<T: 'static> {
+    start: Arc<RwLock<ListNode<T>>>
 }
 
-impl<T> LinkedList<'_, T> where T: Clone, T: Debug + 'static{
-    pub fn new(start: T) -> LinkedList<'static, T> {
+impl<T> LinkedList<T> where T: Clone, T: Debug {
+    pub fn new(start: T) -> LinkedList<T> {
         LinkedList { 
-            start: &ListNode { 
-                value: start, 
-                next: None 
-            }
+            start: ListNode::new_struct(start)
         }
     }
 
 
     pub fn get_start(&self) -> T {
-        self.start.value.to_owned()
+        self.start.clone().read().unwrap().value.clone()
     }
 
     pub fn get_size(&self) -> usize {
-        let mut select = self.start.next;
-        let mut count = 0;
+        let mut select = self.start.read().unwrap().get_next();
+        let mut count = 1;
 
         while !select.is_none() {
-            select = select.unwrap().next;
+            select = select.unwrap().read().unwrap().get_next();
             count += 1;
         }
 
@@ -89,67 +73,67 @@ impl<T> LinkedList<'_, T> where T: Clone, T: Debug + 'static{
     }
 
     pub fn insert_first(&mut self, val: T) {
-        let mut node = ListNode::new(val);
-        node.set_next(self.start.value.clone());
-        self.start = &node;
+        let node = ListNode::new_struct(val);
+        node.write().unwrap().set_next_node(Some(self.start.clone()));
+        self.start = node;
     }
 
     pub fn insert_last(&mut self, node: T) {
-        let mut select = self.start;
+        let mut select = self.start.clone();
 
         loop {
-            match select.next.is_none() {
-                true => break,
-                false => select = select.get_next().unwrap(),
-            }
+            match select.clone().read().unwrap().get_next() {
+                Some(next) => {
+                    select = next;
+                },
+                None => break,
+            };
         }
-        select.set_next(node);
+        select.write().unwrap().set_next(node);
     }
 
     pub fn to_string(&self) -> String {
-        let mut select = self.start;
+        let mut select = self.start.clone();
         let mut out = "".to_string();
         loop {
-            out = format!("{out} -> {:?}", select.value);
+            out = format!("{out} -> {:?}", select.read().unwrap().value);
             println!("{}", out);
 
-            match select.next.is_none() {
-                true => break,
-                false => select = select.next.unwrap().as_ref(),
+            match select.clone().read().unwrap().get_next() {
+                Some(next) => select = next,
+                None => break,
             }
        };
        return out;
     }
 
     pub fn delete_value(&mut self, value: T) -> bool {
-        let mut select = self.start.next.clone().unwrap();
+        let mut select = self.start.read().unwrap().get_next().unwrap();
         let mut prev = select.clone();
 
-        while (!select.next.is_none()) && (select.to_string() != format!("{:?}", value)) {
+        while (!select.clone().read().unwrap().next.is_none()) && (select.clone().read().unwrap().to_string() != format!("{:?}", value)) {
             prev = select.clone();
-            select = select.next.unwrap()
+            select = select.clone().read().unwrap().next.clone().unwrap();
         }
 
-        if !select.next.is_none() && select.to_string() == format!("{:?}", value) {
-            prev.set_next_node(select.next.unwrap());
+        if !select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
+            prev.write().unwrap().set_next_node(Some(select.read().unwrap().next.clone().unwrap().clone()));
             return true;
-        } else if select.next.is_none() && select.to_string() == format!("{:?}", value) {
-            prev.drop_tail();
+        } else if select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
+            prev.write().unwrap().drop_tail();
             return true;
         } else {false}
         
     }
 
     pub fn delete_after(&mut self, len: usize) -> bool {
-        let mut select = self.start;
-        if len > self.get_size() {return false;}
+        let mut select = self.start.clone();
+        if len >= self.get_size() {return false;}
 
-        if len > 0 {
-            for i in 0..len-1 {
-                select = select.next.unwrap();
-            }
+        for _ in 0..len-1 {
+            select = select.clone().read().unwrap().next.clone().unwrap();
         }
-        select.drop_tail();
+        select.write().unwrap().drop_tail();
         return true;
     }
 
