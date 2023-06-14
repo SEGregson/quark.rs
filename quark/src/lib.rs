@@ -1,7 +1,8 @@
+pub mod functions;
 pub mod io;
 mod structures;
 
-
+#[cfg(test)]
 mod tests {
     #[cfg(test)]
     mod linked_lists_tests {
@@ -12,6 +13,15 @@ mod tests {
         fn declaration() {
             let list = LinkedList::new(3);
             assert_eq!(3, list.get_start());
+        }
+
+        #[test]
+        fn get_index() {
+            let mut list = LinkedList::new(3);
+            list.insert_last(4);
+            list.insert_last(3);
+            list.insert_last(7);
+            assert_eq!(list.get(1), Some(4));
         }
 
         #[test]
@@ -41,15 +51,14 @@ mod tests {
             assert_eq!(" -> 4 -> 3", list.to_string());
         }
 
-        // forms deadlock
-        #[test]
-        fn delete_first_value() {
+        #[test]        
+        fn delete_index() {
             let mut list = LinkedList::new(3);
             list.insert_last(4);
             list.insert_last(3);
             list.insert_last(7);
-            list.delete_first_value(4);
-            assert_eq!(" -> 3 -> 3 -> 7", list.to_string());
+            list.delete(0);
+            assert_eq!(" -> 4 -> 3 -> 7", list.to_string());
         }
 
         #[test]
@@ -61,8 +70,25 @@ mod tests {
             list.delete_after(2);
             assert_eq!(" -> 3 -> 4", list.to_string());
         }
+
+        
     }
 
-    //#[test]
+    #[cfg(test)]
+    mod sort_tests {
+        use crate::functions::sorts::{bubble_sort_decending, bubble_sort_ascending};
+
+        #[test]
+        fn bubble_sort_decending_test() {
+            let vec = vec![1,2,3,4];
+            assert_eq!(vec![4,3,2,1], bubble_sort_decending(vec))
+        }
+
+        #[test]
+        fn bubble_sort_ascending_test() {
+            let vec = vec![4,3,2,1];
+            assert_eq!(vec![1,2,3,4], bubble_sort_ascending(vec))
+        }
+    }
     
 }

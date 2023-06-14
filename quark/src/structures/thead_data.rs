@@ -4,6 +4,22 @@ pub struct ThreadData<T> {
     value: Arc<RwLock<T>>
 }
 
+impl<T> Clone for ThreadData<T> {
+    fn clone(&self) -> Self {
+        Self { value: self.value.clone() }
+    }
+} 
+
+// impl<T> PartialEq for ThreadData<T> where  {
+//     fn ne(&self, other: &Self) -> bool {
+//         !self.eq(other)
+//     }
+
+//     fn eq(&self, other: &Self) -> bool {
+//         self.value == other.value
+//     }
+// }
+
 impl<T> ThreadData<T> {
     pub fn new(val: T) -> ThreadData<T> {
         ThreadData { 

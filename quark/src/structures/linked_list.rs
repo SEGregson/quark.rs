@@ -71,6 +71,30 @@ impl<T> LinkedList<T> where T: Clone, T: Debug {
         return count;
     }
 
+    pub fn get(&self, index: usize) -> Option<T> {
+        if index == 0 {return Some(self.get_start());}
+        let mut select = self.start.clone();
+        for _ in 0..index {
+            match select.clone().read().unwrap().get_next() {
+                Some(next) => select = next.clone(),
+                None => return None,
+            }
+        }
+        return Some(select.read().unwrap().value.clone());
+    }
+
+    fn get_node(&self, index: usize) -> Option<Arc<RwLock<ListNode<T>>>> {
+        if index == 0 {return Some(self.start.clone());}
+        let mut select = self.start.clone();
+        for _ in 0..index {
+            match select.clone().read().unwrap().get_next() {
+                Some(next) => select = next.clone(),
+                None => return None,
+            }
+        }
+        return Some(select);
+    }
+
     pub fn insert_first(&mut self, val: T) {
         let node = ListNode::new_struct(val);
         node.write().unwrap().set_next_node(Some(self.start.clone()));
@@ -106,48 +130,21 @@ impl<T> LinkedList<T> where T: Clone, T: Debug {
        return out;
     }
 
-    pub fn delete_first_value(&mut self, value: T) -> bool {
-        let mut select = self.start.read().unwrap().get_next().unwrap();
-        println!("init select");
-        let mut prev = select.clone();
-
-        while (!select.clone().read().unwrap().next.is_none()) && (select.clone().read().unwrap().to_string() != format!("{:?}", value)) {
-            println!("checking: {:?}", select.read().unwrap().to_string());
-            prev = select.clone();
-            select = select.clone().read().unwrap().next.clone().unwrap();
+    pub fn delete(&mut self, index: usize) -> bool {
+        if index == 0 {
+            let temp = self.start.read().unwrap().get_next().unwrap();
+            self.start = temp.clone();
+            return true
         }
-        println!("done loop");
-        if !select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
-            println!("middle of list {:?}", select.read().unwrap().to_string());
-            //prev.write().unwrap().set_next_node(Some(select.read().unwrap().next.clone().unwrap()));
-
-            match prev.clone().write() {
-                Ok(mut prev) => {
-                    prev.set_next_node(Some(match select.read() {
-                        Ok(reading) => {
-                            println!("read successful");
-                            reading
-                        },
-                        Err(e) => {
-                            println!("someth broke {:?}", e);
-                            panic!();
-                        },
-                    }.next.clone().unwrap()));
-                },
-                Err(e) => {
-                    println!("someth broke {:?}", e);
-                    panic!();
-                },
-            }
-            return true;
-        } else if select.read().unwrap().next.is_none() && select.read().unwrap().to_string() == format!("{:?}", value) {
-            println!("end of list {:?}", select.read().unwrap().to_string());
-            prev.write().unwrap().drop_tail();
-            return true;
-        } else {
-            println!("something broke");
-            false
+        match self.get_node(index-1) {
+            Some(node) => {
+                let new = node.read().unwrap().get_next().unwrap().clone().read().unwrap().get_next();
+                node.write().unwrap().next = new;
+                return true;
+            },
+            None => false,
         }
+
         
     }
 
@@ -161,6 +158,7 @@ impl<T> LinkedList<T> where T: Clone, T: Debug {
         select.write().unwrap().drop_tail();
         return true;
     }
+
 
 
 }

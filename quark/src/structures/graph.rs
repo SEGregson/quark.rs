@@ -1,6 +1,8 @@
+use super::thead_data::ThreadData;
+
 struct GraphNode<T> {
     value: T,
-    arcs: Vec<GraphNode<T>>
+    arcs: Vec<ThreadData<GraphNode<T>>>
 }
 
 impl<T> GraphNode<T> {
@@ -10,47 +12,39 @@ impl<T> GraphNode<T> {
             arcs: vec![]
         }
     }
-}
 
-impl<T> Clone for GraphNode<T> where T: Clone {
-    fn clone(&self) -> Self {
-        Self { value: self.value.clone(), arcs: self.arcs.clone() }
-    }
-}
-
-impl<T> PartialEq for GraphNode<T> where T:PartialEq {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value && self.arcs == other.arcs
+    fn new_struct(val: T) -> ThreadData<GraphNode<T>> {
+        ThreadData::new(GraphNode::new(val))
     }
 
-    
+    pub fn add_arc(&mut self, val: T) {
+        self.arcs.push(GraphNode::new_struct(val))
+    } 
+
+    pub fn get_node(&self, val: T){todo!()}
+
 }
+
 
 pub struct UnweightedGraph<T> {
-    entry: GraphNode<T>,
+    entry: ThreadData<GraphNode<T>>,
 }
 
-impl<T> UnweightedGraph<T> where T: Clone, T: PartialEq {
-    fn get_node(&self, value: T) -> Option<GraphNode<T>> {
-        let mut queue = self.entry.arcs.clone();
-        let mut checked: Vec<GraphNode<T>> = vec![];
+impl<T> UnweightedGraph<T>  {
+    fn get_node(&self, val: T) -> Option<GraphNode<T>> {
+        let mut select = self.entry.clone();
 
-        while queue.len() > 0 {
-            let mut node = queue.pop().unwrap();
-            if node.value == value && !checked.contains(&node) {
-                return Some(node);
+        loop {
+            match select.try_read_access() {
+                Some(read) => {
+                    todo!()
+                },
+                None => todo!(),
             }
-            checked.push(node.clone());
-            queue.append(&mut node.arcs)
-            
         }
-
-        return None;
     }
 
-    pub fn insert(&mut self, value: T, parent: T) {
-        
-    }
+    pub fn insert(&mut self, value: T, parent: T) {todo!()}
 
     pub fn add_undirected_arc(&self, link_a: T, link_b: T) {todo!()}
 
