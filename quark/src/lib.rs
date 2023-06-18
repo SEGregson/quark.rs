@@ -90,5 +90,21 @@ mod tests {
             assert_eq!(vec![1,2,3,4], bubble_sort_ascending(vec))
         }
     }
+    #[cfg(test)]
+    mod search_tests {
+        use crate::functions::searches::binary_search;
+
+        #[test]
+        fn binary_search_find() {
+            let vec = vec![1,2,3,4];
+            assert_eq!(Some(2), binary_search(vec, 3))
+        }
+
+        #[test]
+        fn binary_search_fail() {
+            let vec = vec![1,2,3,4];
+            assert_eq!(None, binary_search(vec, 5))
+        }
+    }
     
 }

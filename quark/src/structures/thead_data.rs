@@ -1,4 +1,4 @@
-use std::sync::{RwLock, Arc, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{RwLock, Arc, RwLockReadGuard, RwLockWriteGuard, TryLockError};
 
 pub struct ThreadData<T> {
     value: Arc<RwLock<T>>
@@ -10,15 +10,6 @@ impl<T> Clone for ThreadData<T> {
     }
 } 
 
-// impl<T> PartialEq for ThreadData<T> where  {
-//     fn ne(&self, other: &Self) -> bool {
-//         !self.eq(other)
-//     }
-
-//     fn eq(&self, other: &Self) -> bool {
-//         self.value == other.value
-//     }
-// }
 
 impl<T> ThreadData<T> {
     pub fn new(val: T) -> ThreadData<T> {
@@ -29,18 +20,12 @@ impl<T> ThreadData<T> {
         }
     }
 
-    pub fn try_read_access(&self) -> Option<RwLockReadGuard<'_, T>> {
-        match self.value.try_read() {
-            Ok(out) => Some(out),
-            Err(_) => None,
-        }
+    pub fn try_read_access(&self) -> Result<RwLockReadGuard<'_, T>, TryLockError<RwLockReadGuard<'_, T>>>  {
+        self.value.try_read() 
     }
 
-    pub fn try_write_access(&self) -> Option<RwLockWriteGuard<'_, T>> {
-        match self.value.try_write() {
-            Ok(out) => Some(out),
-            Err(_) => None,
-        }
+    pub fn try_write_access(&self) -> Result<RwLockWriteGuard<'_, T>, TryLockError<RwLockWriteGuard<'_, T>>> {
+        self.value.try_write() 
     }
 
     pub fn force_read_access(&self) -> RwLockReadGuard<'_, T> {

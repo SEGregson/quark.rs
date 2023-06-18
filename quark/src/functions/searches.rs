@@ -1,26 +1,26 @@
-use super::sorts::bubble_sort_ascending;
-
-pub fn binary_search<T: PartialOrd + Copy>(lst: Vec<T>, val: T) -> bool {
-    let mut subj = bubble_sort_ascending(lst);
-    
+/*
+    assumes vector is ordered into ascending order
+ */
+pub fn binary_search<T: PartialOrd + Copy>(mut lst: Vec<T>, val: T) -> Option<usize> {
     let mut select;
+    let mut count;
     loop {
-        
-        select = subj[subj.len()/2];
+        count = lst.len()/2;
+        select = lst[count];
         if select == val {
-            return true
+            return Some(count);
         } else {
-            if subj.len() <= 1 {return false;}
-            subj = remove_half(subj, select < val);
+            if lst.len() <= 1 {return None;}
+            lst = remove_half(lst, select < val);
         }
     }
-}
-
-fn remove_half<T>(mut lst: Vec<T>, side: bool) -> Vec<T> {
-    for i in 
-        if side {0..lst.len()/2} else {lst.len()/2..lst.len()} {
-            lst.remove(i);
+    fn remove_half<T>(mut lst: Vec<T>, side: bool) -> Vec<T> {
+        for i in 
+            if side {0..lst.len()/2} else {lst.len()/2..lst.len()} {
+                lst.remove(i);
+        }
+        return lst;
+    
     }
-    return lst;
-
 }
+
